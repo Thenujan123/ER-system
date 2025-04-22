@@ -2,15 +2,15 @@ import axios, { AxiosError, CreateAxiosDefaults, ResponseType } from "axios";
 
 export const createApiClient = ({
   baseURL,
-  responseType,
+  responseType = "json",
   headers,
   options,
   getToken,
   logout,
 }: {
   baseURL: string;
-  responseType: ResponseType | undefined;
-  headers: CreateAxiosDefaults["headers"];
+  responseType?: ResponseType | undefined;
+  headers?: CreateAxiosDefaults["headers"];
   options?: Omit<CreateAxiosDefaults, "baseURL" | "method" | "responseType">;
   getToken: () => string | undefined | null;
   logout: () => void;

@@ -1,0 +1,80 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../app/generated/prisma"
+}
+
+datasource db {
+  provider = "mongodb"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  EMPLOYEE
+  OWNER
+  SUPERVISOR
+}
+
+enum UserStatus {
+  ACTIVE
+  DEACTIVE
+  INVITED
+}
+
+enum OrganizationStatus {
+  ACTIVE
+  DEACTIVE
+}
+
+model User {
+  id                  String                @id @default(auto()) @map("_id") @db.ObjectId
+  firstName           String?
+  lastName            String?
+  email               String                @unique
+  password            String
+  OrganizationMembers OrganizationMembers[]
+  OwnedOrganization   Organization[]        @relation(name: "OrganizationOwner")
+  createdAt           DateTime              @default(now())
+  updatedAt           DateTime              @updatedAt
+}
+
+model Organization {
+  id                  String                @id @default(auto()) @map("_id") @db.ObjectId
+  name                String                @unique
+  status              OrganizationStatus    @default(ACTIVE)
+  OrganizationMembers OrganizationMembers[]
+
+  ownerId   String?  @db.ObjectId
+  Owner     User?    @relation(name: "OrganizationOwner", fields: [ownerId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model OrganizationMembers {
+  id String @id @default(auto()) @map("_id") @db.ObjectId
+
+  role        UserRole   @default(EMPLOYEE)
+  permissions String[]
+  status      UserStatus @default(ACTIVE)
+
+  userId String @db.ObjectId
+  User   User   @relation(fields: [userId], references: [id])
+
+  organizationId String       @db.ObjectId
+  Organization   Organization @relation(fields: [organizationId], references: [id])
+
+  supervisorId String?               @db.ObjectId
+  Supervisor   OrganizationMembers?  @relation("SupervisorEmployee", fields: [supervisorId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  Employee     OrganizationMembers[] @relation("SupervisorEmployee")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([userId, organizationId])
+  @@index([organizationId, supervisorId])
+}

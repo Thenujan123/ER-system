@@ -54,7 +54,7 @@ model OrganizationMembers{
 
     role UserRole @default(EMPLOYEE)
     permissions String[]
-    status UserStatus 
+    status UserStatus @default(ACTIVE)
 
     userId String @db.ObjectId
     User User @relation(fields: [userId],references: [id])
